@@ -14,10 +14,13 @@ const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'data');
 const UPLOADS_DIR = path.join(DATA_DIR, 'uploads');
 const BASE_URL = process.env.BASE_URL || 'http://localhost:3000';
 
+// Move this AFTER ensuring directories exist
+app.use('/uploads', express.static(UPLOADS_DIR));
+
 // Configure multer for file uploads
 const storage = multer.diskStorage({
   destination: async (req, file, cb) => {
-    await fs.mkdir(UPLOADS_DIR, { recursive: true });
+    await ensureDirectories(); // Make sure directories exist before upload
     cb(null, UPLOADS_DIR);
   },
   filename: (req, file, cb) => {
@@ -30,7 +33,6 @@ const upload = multer({ storage });
 
 app.use(cors());
 app.use(express.json());
-app.use('/uploads', express.static(UPLOADS_DIR));
 
 // Upload endpoint
 app.post('/api/upload', upload.single('file'), (req, res) => {
@@ -52,7 +54,7 @@ async function ensureDirectories() {
   }
 }
 
-// Call it when server starts
+// Call this at startup
 ensureDirectories();
 
 // Save application data
