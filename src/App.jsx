@@ -125,7 +125,9 @@ function App() {
 
   useEffect(() => {
     const handleKeyPress = (e) => {
-      if (e.key.toLowerCase() === 'd') {
+      // Check for Ctrl+D (or Cmd+D on Mac)
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'd') {
+        e.preventDefault(); // Prevent browser's default "bookmark" action
         reset(sampleData);
       }
     };
