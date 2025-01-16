@@ -58,7 +58,7 @@ ensureDirectories();
 // Save application data
 app.post('/api/applications', async (req, res) => {
   try {
-    await ensureDataDir();
+    await ensureDirectories();
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
     const filename = `application-${timestamp}.json`;
     const filepath = path.join(DATA_DIR, filename);
@@ -72,6 +72,24 @@ app.post('/api/applications', async (req, res) => {
   } catch (error) {
     console.error('Error saving application:', error);
     res.status(500).json({ error: 'Failed to save application' });
+  }
+});
+
+app.get('/', (req, res) => {
+  res.json({ status: 'API is running' });
+});
+
+app.get('/uploads-test', async (req, res) => {
+  try {
+    await ensureDirectories();
+    const files = await fs.readdir(UPLOADS_DIR);
+    res.json({ 
+      status: 'Uploads directory exists',
+      files,
+      uploadsPath: UPLOADS_DIR
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 });
 
