@@ -51,6 +51,19 @@ async function ensureDataDir() {
   }
 }
 
+// Ensure both directories exist on startup
+async function ensureDirectories() {
+  try {
+    await fs.mkdir(DATA_DIR, { recursive: true });
+    await fs.mkdir(UPLOADS_DIR, { recursive: true });
+  } catch (error) {
+    console.error('Error creating directories:', error);
+  }
+}
+
+// Call it when server starts
+ensureDirectories();
+
 // Save application data
 app.post('/api/applications', async (req, res) => {
   try {
