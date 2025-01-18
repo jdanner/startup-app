@@ -12,6 +12,9 @@ services:
       - path: /*
         name: Cache-Control
         value: no-cache
+    domains:
+      - danners.org
+      - www.danners.org
   
   # Simple API for storing applications
   - type: web
@@ -23,8 +26,10 @@ services:
       - key: DATA_DIR
         value: /data
       - key: BASE_URL
-        value: https://startup-apply-api.onrender.com 
+        value: https://api.danners.org
     disk:
       name: startup-data
       mountPath: /data
-      sizeGB: 1 
+      sizeGB: 1
+    domains:
+      - api.danners.org 

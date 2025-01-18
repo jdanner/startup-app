@@ -63,7 +63,73 @@ Create a streamlined platform for startups to submit funding applications with c
 
 ## Timeline - today
 
+## 1/15/24
 
+Key Accomplishments:
+1. Set up EmailJS for application notifications
+   - Service ID: service_gl3xzva
+   - Template ID: template_h62tu28
+   - Configured template with company info, URLs, and metrics
+
+2. Implemented file uploads
+   - Created API endpoint for file storage
+   - Files stored in Render disk storage (1GB)
+   - Files accessible via /uploads directory
+   - URLs included in email notifications
+
+3. Added data persistence
+   - Applications stored as JSON files
+   - Using Render disk storage
+   - Each application includes timestamp and file URLs
+
+4. UX Improvements
+   - Changed sample data shortcut from 'D' to 'Ctrl+D'
+   - Added health check endpoint to API
+   - Added uploads-test endpoint for debugging
+
+Infrastructure Decisions:
+1. Using Render's disk storage instead of S3 for MVP
+2. EmailJS for email handling (simpler than setting up SMTP)
+3. Static file hosting for uploads
+4. JSON files for data storage (can migrate to DB later)
+
+Next Steps:
+1. Monitor disk usage
+2. Consider database migration if application volume grows
+3. Add file type validation
+4. Implement file size limits
+
+## Next Steps (1/16/24)
+
+1. Create danners.org homepage
+   - Clean, minimal design
+   - Two main sections: Startups and Non-Profits
+   - Navigation between sections
+
+2. Startups Section
+   - List of portfolio companies from jobs work
+   - Link to startup application form
+   - Brief description of investment thesis
+   - Add metrics/report card explanation
+
+3. Non-Profits Section
+   - TBD based on requirements
+
+4. Domain Configuration
+   - Connect danners.org to Render
+   - Set up SSL
+   - Configure subdomains if needed
+
+5. Application Form Improvements
+   - Add file size limits (25MB)
+   - Improve file type validation
+   - Monitor disk usage
+   - Consider database migration path
+
+Would you like me to:
+1. Create initial homepage mockups
+2. Research domain configuration for Render
+3. Something else?
 
 ## Future Enhancements
 - API integration with common startup tools
