@@ -27,16 +27,18 @@ const uploadFile = async (file) => {
 
 const uploadFiles = async (data) => {
   try {
-    const [deckFile, videoFile, experimentFile] = await Promise.all([
+    const [deckFile, videoFile, experimentFile, analyticsFile] = await Promise.all([
       data.deckFile?.[0] ? uploadFile(data.deckFile[0]) : null,
       data.videoFile?.[0] ? uploadFile(data.videoFile[0]) : null,
-      data.experimentFile?.[0] ? uploadFile(data.experimentFile[0]) : null
+      data.experimentFile?.[0] ? uploadFile(data.experimentFile[0]) : null,
+      data.analyticsFile?.[0] ? uploadFile(data.analyticsFile[0]) : null
     ]);
 
     return {
       deckUrl: deckFile || data.deckUrl || '',
       videoUrl: videoFile || data.videoUrl || '',
-      experimentUrl: experimentFile || data.experimentUrl || ''
+      experimentUrl: experimentFile || data.experimentUrl || '',
+      analyticsUrl: analyticsFile || data.analyticsUrl || ''
     };
   } catch (error) {
     console.error('Error uploading files:', error);
@@ -57,6 +59,7 @@ const sendApplicationEmail = async (data) => {
         deck_url: data.deckUrl || 'File uploaded',
         video_url: data.videoUrl || 'None',
         experiments_url: data.experimentUrl || 'None',
+        analytics_url: data.analyticsUrl || 'None',
         metrics: `Need: ${data.need}%
 Value Proposition: ${data.valueProposition}%
 Magic: ${data.magic}%
@@ -82,25 +85,28 @@ Experiments per Week: ${data.experimentsPerWeek}`
 
 const saveApplication = async (data) => {
   try {
-    const response = await fetch(`${API_URL}/api/applications`, {
+    const response = await fetch('http://localhost:3000/api/applications', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        timestamp: new Date().toISOString(),
-        ...data
-      })
+      body: JSON.stringify(data)
     });
-    return response.ok;
+
+    if (!response.ok) {
+      throw new Error('Failed to save application');
+    }
+
+    window.alert('Application submitted successfully!');
+    window.location.href = '/';
   } catch (error) {
     console.error('Storage error:', error);
-    return false;
+    window.alert('Failed to submit application. Please try again.');
   }
 };
 
 function App() {
-  const { register, handleSubmit, formState: { errors, isSubmitting }, reset } = useForm();
+  const { register, handleSubmit, formState: { errors, isSubmitting }, reset, watch, setValue } = useForm();
 
   const sampleData = {
     companyName: "Cursor AI",
@@ -149,7 +155,7 @@ function App() {
     // Basic domain validation - requires at least one dot and common TLD
     const commonTLDs = ['com', 'org', 'net', 'edu', 'io', 'app', 'dev', 'ai', 'co'];
     const domainPattern = new RegExp(
-      `^https?:\/\/.+\.(${commonTLDs.join('|')})(?:\/.*)?$`,
+      `^https?://.+\\.(${commonTLDs.join('|')})(?:/.*)?$`,
       'i'
     );
     
@@ -173,7 +179,8 @@ function App() {
         ...fileUrls
       });
       
-      alert('Application submitted successfully!');
+      window.alert('Application submitted successfully!');
+      window.location.href = '/';
     } catch (error) {
       console.error('Error:', error);
       alert('Error submitting application. Please try again.');
@@ -232,7 +239,7 @@ function App() {
     {
       stage: 'Channel',
       name: 'channel',
-      metric: 'Number of non-growth loop organic visitors coming to site',
+      metric: 'Number of daily organic visitors (excluding growth loops)',
       type: 'number'
     },
     {
@@ -312,102 +319,183 @@ function App() {
             <h2 className="text-xl font-semibold">Documents</h2>
             
             {/* Deck/Memo Section */}
-            <div className="space-y-2">
+            <div className="space-y-2 border border-gray-400 rounded-lg p-4">
               <label className="block text-sm font-medium text-gray-700">Deck/Memo (Required)</label>
               <div className="space-y-2">
-                <div>
+                <div className="relative flex items-center">
                   <input
                     type="file"
                     accept=".pdf,.ppt,.pptx"
                     {...register('deckFile')}
-                    className="mt-1 block w-full"
+                    className={`flex-1 ${watch('deckUrl') ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    disabled={!!watch('deckUrl')}
                   />
-                </div>
-                <div className="- mt-1">
-                  <div className="text-sm text-gray-500">Or provide a link:</div>
-                  <input
-                    type="text"
-                    {...register('deckUrl', { 
-                      validate: (value) => {
-                        const fileUploaded = !!document.querySelector('input[name="deckFile"]').files[0];
-                        if (!fileUploaded && !value) {
-                          return 'Either a file or URL is required';
-                        }
-                        if (!value) return true;
-                        return validateUrl(value);
-                      }
-                    })}
-                    placeholder="link to your deck/memo"
-                    className={`mt-1 block w-full rounded-md border ${
-                      errors.deckUrl ? 'border-red-500' : 'border-gray-300'
-                    } px-3 py-2`}
-                  />
-                  {errors.deckUrl && (
-                    <p className="mt-1 text-xs text-red-500">{errors.deckUrl.message}</p>
+                  {watch('deckFile')?.[0] && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setValue('deckFile', null);
+                        document.querySelector('input[name="deckFile"]').value = '';
+                      }}
+                      className="ml-2 bg-red-100 hover:bg-red-200 text-red-600 rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0"
+                      title="Clear file"
+                    >
+                      ×
+                    </button>
                   )}
                 </div>
+                <div className="text-sm text-gray-500 font-medium text-center">OR</div>
+                <div className="relative flex items-center">
+                  <input
+                    type="text"
+                    {...register('deckUrl')}
+                    placeholder="Enter deck URL"
+                    className={`flex-1 rounded-md border ${
+                      errors.deckUrl ? 'border-red-500' : 'border-gray-300'
+                    } px-3 py-2 ${watch('deckFile')?.[0] ? 'opacity-50 cursor-not-allowed bg-gray-100' : ''}`}
+                    disabled={!!watch('deckFile')?.[0]}
+                  />
+                  {watch('deckUrl') && !watch('deckFile')?.[0] && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setValue('deckUrl', '');
+                      }}
+                      className="ml-2 bg-red-100 hover:bg-red-200 text-red-600 rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0"
+                      title="Clear URL"
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
+                {errors.deckUrl && (
+                  <p className="mt-1 text-xs text-red-500">{errors.deckUrl.message}</p>
+                )}
               </div>
             </div>
 
             {/* Demo Video Section */}
-            <div className="space-y-2">
+            <div className="space-y-2 border border-gray-400 rounded-lg p-4">
               <label className="block text-sm font-medium text-gray-700">Demo Video/Loom (Optional)</label>
               <div className="space-y-2">
-                <div>
+                <div className="relative flex items-center">
                   <input
                     type="file"
                     accept="video/*"
                     {...register('videoFile')}
-                    className="mt-1 block w-full"
+                    className={`flex-1 ${watch('videoUrl') ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    disabled={!!watch('videoUrl')}
                   />
-                </div>
-                <div className="- mt-1">
-                  <div className="text-sm text-gray-500">Or provide a link:</div>
-                  <input
-                    type="text"
-                    {...register('videoUrl', { 
-                      validate: value => !value || validateUrl(value)
-                    })}
-                    placeholder="loom.com/share/your-video"
-                    className={`mt-1 block w-full rounded-md border ${
-                      errors.videoUrl ? 'border-red-500' : 'border-gray-300'
-                    } px-3 py-2`}
-                  />
-                  {errors.videoUrl && (
-                    <p className="mt-1 text-xs text-red-500">Please enter a valid video URL</p>
+                  {watch('videoFile')?.[0] && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setValue('videoFile', null);
+                        document.querySelector('input[name="videoFile"]').value = '';
+                      }}
+                      className="ml-2 bg-red-100 hover:bg-red-200 text-red-600 rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0"
+                      title="Clear file"
+                    >
+                      ×
+                    </button>
                   )}
                 </div>
+                <div className="text-sm text-gray-500 font-medium text-center">OR</div>
+                <div className="relative flex items-center">
+                  <input
+                    type="text"
+                    {...register('videoUrl')}
+                    placeholder="Enter video URL (e.g., loom.com/share/...)"
+                    className={`flex-1 rounded-md border ${
+                      errors.videoUrl ? 'border-red-500' : 'border-gray-300'
+                    } px-3 py-2 ${watch('videoFile')?.[0] ? 'opacity-50 cursor-not-allowed bg-gray-100' : ''}`}
+                    disabled={!!watch('videoFile')?.[0]}
+                  />
+                  {watch('videoUrl') && !watch('videoFile')?.[0] && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setValue('videoUrl', '');
+                      }}
+                      className="ml-2 bg-red-100 hover:bg-red-200 text-red-600 rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0"
+                      title="Clear URL"
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
+                {errors.videoUrl && (
+                  <p className="mt-1 text-xs text-red-500">{errors.videoUrl.message}</p>
+                )}
               </div>
             </div>
 
-            {/* Experiment Documentation Section */}
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">Experiment Documentation (Optional)</label>
+            {/* Experiment Dashboard Section */}
+            <div className="space-y-2 border border-gray-400 rounded-lg p-4">
+              <div className="flex items-center justify-between">
+                <label className="block text-sm font-medium text-gray-700">Experiment Dashboard (Optional)</label>
+                <a 
+                  href="https://docs.google.com/spreadsheets/d/1zVD9nHWNkp66ZjnVhAr6nZWDm3UOH7UC6cRy9LzDHjk/edit?usp=sharing"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="ml-2 text-gray-500 hover:text-gray-700"
+                  title="View sample experiment dashboard"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+                  </svg>
+                </a>
+              </div>
               <div className="space-y-2">
-                <div>
+                <div className="relative flex items-center">
                   <input
                     type="file"
                     accept=".pdf,.doc,.docx,.xls,.xlsx"
                     {...register('experimentFile')}
-                    className="mt-1 block w-full"
+                    className={`flex-1 ${watch('experimentUrl') ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    disabled={!!watch('experimentUrl')}
                   />
-                </div>
-                <div className="- mt-1">
-                  <div className="text-sm text-gray-500">Or provide a link:</div>
-                  <input
-                    type="text"
-                    {...register('experimentUrl', { 
-                      validate: value => !value || validateUrl(value)
-                    })}
-                    placeholder="link to your experiment documentation"
-                    className={`mt-1 block w-full rounded-md border ${
-                      errors.experimentUrl ? 'border-red-500' : 'border-gray-300'
-                    } px-3 py-2`}
-                  />
-                  {errors.experimentUrl && (
-                    <p className="mt-1 text-xs text-red-500">Please enter a valid URL</p>
+                  {watch('experimentFile')?.[0] && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setValue('experimentFile', null);
+                        document.querySelector('input[name="experimentFile"]').value = '';
+                      }}
+                      className="ml-2 bg-red-100 hover:bg-red-200 text-red-600 rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0"
+                      title="Clear file"
+                    >
+                      ×
+                    </button>
                   )}
                 </div>
+                <div className="text-sm text-gray-500 font-medium text-center">OR</div>
+                <div className="relative flex items-center">
+                  <input
+                    type="text"
+                    {...register('experimentUrl')}
+                    placeholder="Enter dashboard URL"
+                    className={`flex-1 rounded-md border ${
+                      errors.experimentUrl ? 'border-red-500' : 'border-gray-300'
+                    } px-3 py-2 ${watch('experimentFile')?.[0] ? 'opacity-50 cursor-not-allowed bg-gray-100' : ''}`}
+                    disabled={!!watch('experimentFile')?.[0]}
+                  />
+                  {watch('experimentUrl') && !watch('experimentFile')?.[0] && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setValue('experimentUrl', '');
+                      }}
+                      className="ml-2 bg-red-100 hover:bg-red-200 text-red-600 rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0"
+                      title="Clear URL"
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
+                {errors.experimentUrl && (
+                  <p className="mt-1 text-xs text-red-500">{errors.experimentUrl.message}</p>
+                )}
               </div>
             </div>
           </div>
@@ -436,6 +524,65 @@ function App() {
                 />
               </div>
             ))}
+
+            {/* Analytics Screenshots Section */}
+            <div className="space-y-2 border border-gray-400 rounded-lg p-4 mt-4">
+              <label className="block text-sm font-medium text-gray-700">Analytics Screenshots</label>
+              <div className="text-xs text-gray-500 italic mb-2">
+                Please provide screenshots validating your metrics (e.g. Google Analytics, Mixpanel, etc.)
+              </div>
+              <div className="space-y-2">
+                <div className="relative flex items-center">
+                  <input
+                    type="file"
+                    accept=".zip"
+                    {...register('analyticsFile')}
+                    className={`flex-1 ${watch('analyticsUrl') ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    disabled={!!watch('analyticsUrl')}
+                  />
+                  {watch('analyticsFile')?.[0] && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setValue('analyticsFile', null);
+                        document.querySelector('input[name="analyticsFile"]').value = '';
+                      }}
+                      className="ml-2 bg-red-100 hover:bg-red-200 text-red-600 rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0"
+                      title="Clear file"
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
+                <div className="text-sm text-gray-500 font-medium text-center">OR</div>
+                <div className="relative flex items-center">
+                  <input
+                    type="text"
+                    {...register('analyticsUrl')}
+                    placeholder="Enter link to analytics screenshots"
+                    className={`flex-1 rounded-md border ${
+                      errors.analyticsUrl ? 'border-red-500' : 'border-gray-300'
+                    } px-3 py-2 ${watch('analyticsFile')?.[0] ? 'opacity-50 cursor-not-allowed bg-gray-100' : ''}`}
+                    disabled={!!watch('analyticsFile')?.[0]}
+                  />
+                  {watch('analyticsUrl') && !watch('analyticsFile')?.[0] && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setValue('analyticsUrl', '');
+                      }}
+                      className="ml-2 bg-red-100 hover:bg-red-200 text-red-600 rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0"
+                      title="Clear URL"
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
+                {errors.analyticsUrl && (
+                  <p className="mt-1 text-xs text-red-500">{errors.analyticsUrl.message}</p>
+                )}
+              </div>
+            </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700">Experiments per Week</label>

@@ -101,35 +101,31 @@ Next Steps:
 
 ## Next Steps (1/16/24)
 
-1. Create danners.org homepage
-   - Clean, minimal design
-   - Two main sections: Startups and Non-Profits
-   - Navigation between sections
+1. Admin View for Applications
+   - Create a simple page to view all applications
+   - URL: /admin/applications
+   - List view showing:
+     * Company name
+     * Submission date
+     * Founder name
+   - Click to view full application details:
+     * All submitted form data
+     * Links to uploaded files
+     * Metrics with grades
+   - No authentication needed (internal URL)
 
-2. Startups Section
-   - List of portfolio companies from jobs work
-   - Link to startup application form
-   - Brief description of investment thesis
-   - Add metrics/report card explanation
+2. AI Integration
+   - Add Claude 3.5 Sonnet integration for application evaluation
+   - Generate AI summary and score based on submitted information
+   - Include AI evaluation in email notification
+   - Focus on evaluating:
+     * Team composition and experience
+     * Problem clarity and market size
+     * Solution uniqueness and feasibility
+     * Traction and metrics
+   - AI output should be included in the email notification only (not shown to applicants)
 
-3. Non-Profits Section
-   - TBD based on requirements
-
-4. Domain Configuration
-   - Connect danners.org to Render
-   - Set up SSL
-   - Configure subdomains if needed
-
-5. Application Form Improvements
-   - Add file size limits (25MB)
-   - Improve file type validation
-   - Monitor disk usage
-   - Consider database migration path
-
-Would you like me to:
-1. Create initial homepage mockups
-2. Research domain configuration for Render
-3. Something else?
+Note: File upload improvements, form validation, and email template updates will be handled in a future iteration if needed.
 
 ## Future Enhancements
 - API integration with common startup tools
@@ -420,3 +416,70 @@ yes, all these make sense except 4 which is part of the submission
     
 Would you like me to start with the React implementation?
 Yes this is a good plan.
+
+# DNS and Deployment Setup - Jan 17, 2025
+
+## DNS Configuration
+- Configured Network Solutions DNS records:
+  - A record for `danners.org` pointing to Render's IP `216.24.57.1` (TTL: 2 hours)
+  - CNAME record for `www.danners.org` pointing to `startup-apply.onrender.com` (TTL: 4 hours)
+
+## Render Setup
+- Added custom domains in Render dashboard:
+  - Primary domain: `danners.org`
+  - Redirect domain: `www.danners.org` (redirects to danners.org)
+- Attempted SSL certificate issuance multiple times
+- Removed and re-added domains to trigger fresh verification
+
+## Troubleshooting Steps
+1. Verified DNS records in Network Solutions matched Render's requirements
+2. Confirmed DNS settings:
+   - A record is correctly set to `216.24.57.1`
+   - CNAME is correctly set to `startup-apply.onrender.com`
+3. DNS propagation checks showed old values still being served
+4. Decided to wait for full DNS propagation (can take up to 48 hours)
+
+## Next Steps
+- Check DNS propagation status tomorrow
+- If still not resolved:
+  1. Verify DNS records again
+  2. Check for any conflicting records
+  3. Consider adjusting TTL values
+  4. Try removing and re-adding domains in Render again
+
+# UX Improvements Needed - Jan 17, 2025
+
+## Form Navigation
+- After successful submission, redirect user to danners.org homepage
+
+## File Upload Improvements
+1. File/Link Toggle:
+   - When file is chosen:
+     - Grey out the link input field
+     - Show X button next to file
+     - Disable link input
+   - When link is entered:
+     - Grey out the file upload button
+     - Show X button next to link
+     - Disable file input
+   - X button should:
+     - Clear the selected option
+     - Re-enable both inputs
+
+## Metric Updates
+1. Channel Metric:
+   - Update label to specify "daily" organic visitors
+   - Add hover description
+
+2. Analytics Validation:
+   - Add new field for uploading analytics screenshots
+   - Accept ZIP files only
+   - Use to validate metrics input by user
+
+## Implementation Status
+- Basic form structure complete
+- Redirect after submission added
+- File/link toggle attempted but needs fixing
+- Channel metric label updated
+- Analytics upload field added
+- Toggle and X button functionality needs debugging
