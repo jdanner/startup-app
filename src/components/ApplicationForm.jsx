@@ -1,26 +1,76 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+
+console.log('=====================================');
+console.log('LOADING APPLICATION FORM COMPONENT');
+console.log('=====================================');
 
 export default function ApplicationForm() {
+  console.log('ApplicationForm component rendering');
+
+  useEffect(() => {
+    console.log('ApplicationForm mounted');
+    console.log('EmailJS available:', !!window.emailjs);
+  }, []);
+
   const [formData, setFormData] = useState({
     deck: null,
     deckLink: '',
-    channel: '',
+    channel: '10',
     analytics: null
   });
+
+  console.log('Current formData:', formData);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    
+    console.log('Submit handler triggered');
+    
+    if (!window.emailjs) {
+      console.error('EmailJS not loaded');
+      return;
+    }
+    
+    const emailData = {
+      from_name: "Application Form",
+      message: `
+Company Information
+Company:
+Website:
+Founder:
+Email:
+
+Documents
+Deck/Memo: ${formData.deck ? formData.deck.name : formData.deckLink || 'Not provided'}
+Analytics File: ${formData.analytics ? formData.analytics.name : 'No file uploaded'}
+
+Metrics
+Channel: ${formData.channel || 'Not provided'}
+      `,
+      to_email: "john@danners.org"
+    };
+    
+    console.log('Form Data:', formData);
+    console.log('Email Data:', JSON.stringify(emailData, null, 2));
+    
+    window.emailjs.send("service_gl3xzva", "template_h62tu28", emailData)
+      .then(
+        function(response) {
+          console.log("EmailJS Response:", response);
+          window.location.href = 'https://danners.org';
+        },
+        function(error) {
+          console.error("EmailJS Error:", error);
+          alert("Failed to send email: " + JSON.stringify(error));
+        }
+      );
+  };
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
     }));
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    // ... existing submission logic ...
-    
-    // After successful submission, redirect to home page
-    window.location.href = 'https://danners.org';
   };
 
   const handleFileSelect = (e, field) => {

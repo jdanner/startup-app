@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>EmailJS Test</title>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+</head>
+<body>
+    <button onclick="sendEmail()">Test Email</button>
+
+    <script>
+        const formData = {
+            channel: "800",
+            experimentsPerWeek: "3",
+            analytics: { name: "analytics.zip" },
+            deck: { name: "deck.pdf" },
+            deckLink: ""
+        };
+
+        (function() {
+            emailjs.init("KnFnlHEmTFfBtgae-");
+        })();
+
+        function sendEmail() {
+            console.log('Attempting to send email with:', formData);
+            emailjs.send("service_gl3xzva", "template_h62tu28", {
+                from_name: "Application Form",
+                message: `
+Channel: ${formData.channel}
+Experiments per Week: ${formData.experimentsPerWeek}
+Analytics File: ${formData.analytics ? formData.analytics.name : 'No file uploaded'}
+Deck: ${formData.deck ? formData.deck.name : formData.deckLink || 'Not provided'}
+                `,
+                to_email: "john@danners.org"
+            }).then(
+                function(response) {
+                    console.log("SUCCESS", response);
+                    alert("Email sent successfully!");
+                },
+                function(error) {
+                    console.log("FAILED", error);
+                    alert("Failed to send email: " + JSON.stringify(error));
+                }
+            );
+        }
+    </script>
+</body>
+</html> 

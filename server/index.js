@@ -1,13 +1,10 @@
-import express from 'express';
-import cors from 'cors';
-import { promises as fs } from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import process from 'process';
-import multer from 'multer';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const express = require('express');
+const cors = require('cors');
+const fs = require('fs').promises;
+const path = require('path');
+const multer = require('multer');
+const nodemailer = require('nodemailer');
+require('dotenv').config();
 
 // Configure storage based on environment
 const isProduction = process.env.NODE_ENV === 'production';
@@ -34,7 +31,13 @@ const upload = multer({ storage: storage });
 const app = express();
 const port = process.env.PORT || 3000;
 
-app.use(cors());
+// Update CORS configuration to allow requests from port 5173
+app.use(cors({
+  origin: 'http://localhost:5173',
+  methods: ['POST', 'GET', 'OPTIONS'],
+  credentials: true
+}));
+
 app.use(express.json());
 
 // Serve static files from the appropriate uploads directory
@@ -117,6 +120,52 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
   }
 });
 
+// Add a basic test route
+app.get('/api/test', (req, res) => {
+  console.log('Test endpoint hit');
+  res.json({ message: 'Server is running' });
+});
+
+// Add email configuration
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASSWORD
+  }
+});
+
+// Update the submit-application endpoint
+app.post('/api/submit-application', async (req, res) => {
+  console.log('Received application submission');
+  console.log('Request body:', req.body);
+  
+  try {
+    // Send email
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: 'your-email@example.com', // Replace with your email
+      subject: 'New Application Submission',
+      text: `
+        New application received:
+        Channel: ${req.body.channel}
+        Experiments per Week: ${req.body.experimentsPerWeek}
+        
+        View full details in the admin dashboard.
+      `
+    };
+
+    await transporter.sendMail(mailOptions);
+    console.log('Email sent successfully');
+    
+    res.json({ message: 'Application received and email sent' });
+  } catch (error) {
+    console.error('Server error:', error);
+    res.status(500).json({ error: 'Failed to process application' });
+  }
+});
+
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
+  console.log(`CORS enabled for origin: http://localhost:5173`);
 }); 

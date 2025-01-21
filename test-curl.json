@@ -1,0 +1,12 @@
+curl -X POST https://api.emailjs.com/api/v1.0/email/send \
+-H "Content-Type: application/json" \
+-d '{
+  "service_id": "service_gl3xzva",
+  "template_id": "template_62c2bup",
+  "user_id": "KnFnlHEmTFfBtgae-",
+  "template_params": {
+    "channel": "800",
+    "experimentsPerWeek": "3",
+    "to_email": "john@example.com"
+  }
+}'

@@ -2,3 +2,5 @@ node_modules/
 dist/
 .env
 api/data/
+server/applications/
+server/uploads/
