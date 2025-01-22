@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
 export default function AdminView() {
   const [applications, setApplications] = useState([]);
   const [expandedId, setExpandedId] = useState(null);
@@ -10,9 +12,11 @@ export default function AdminView() {
 
   const fetchApplications = async () => {
     try {
-      const response = await fetch('http://localhost:3000/api/applications');
+      console.log('Fetching applications from:', `${API_URL}/api/applications`);
+      const response = await fetch(`${API_URL}/api/applications`);
       if (!response.ok) throw new Error('Failed to fetch applications');
       const data = await response.json();
+      console.log('Fetched applications:', data);
       setApplications(data);
     } catch (error) {
       console.error('Error fetching applications:', error);
@@ -27,13 +31,42 @@ export default function AdminView() {
     return new Date(timestamp).toLocaleDateString();
   };
 
+  const deleteApplication = async (timestamp) => {
+    if (!confirm('Are you sure you want to delete this application?')) return;
+    
+    try {
+      // First do preflight check
+      const preflightResponse = await fetch(`${API_URL}/api/applications/${timestamp}`, {
+        method: 'OPTIONS'
+      });
+      
+      if (!preflightResponse.ok) throw new Error('Preflight failed');
+      
+      // Then do DELETE
+      const response = await fetch(`${API_URL}/api/applications/${timestamp}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!response.ok) throw new Error('Failed to delete');
+      
+      // Only update UI after successful delete
+      setApplications(applications.filter(app => app.timestamp !== timestamp));
+    } catch (error) {
+      console.error('Delete error:', error);
+      alert('Failed to delete application');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-6xl mx-auto">
         <h1 className="text-2xl font-bold mb-6">Submitted Applications</h1>
         <div className="space-y-4">
           {applications.map((app) => (
-            <div key={app.timestamp} className="bg-white rounded-lg shadow">
+            <div key={app.timestamp} className="bg-white rounded-lg shadow relative">
               {/* Summary Row */}
               <div 
                 onClick={() => toggleExpand(app.timestamp)}
@@ -99,6 +132,19 @@ export default function AdminView() {
                   </div>
                 </div>
               )}
+
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  deleteApplication(app.timestamp);
+                }}
+                className="absolute top-2 right-2 text-red-600 hover:text-red-800"
+                title="Delete application"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
             </div>
           ))}
         </div>

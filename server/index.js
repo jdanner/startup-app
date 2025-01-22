@@ -1,10 +1,17 @@
-const express = require('express');
-const cors = require('cors');
-const fs = require('fs').promises;
-const path = require('path');
-const multer = require('multer');
-const nodemailer = require('nodemailer');
-require('dotenv').config();
+import express from 'express';
+import cors from 'cors';
+import { promises as fs } from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import multer from 'multer';
+import nodemailer from 'nodemailer';
+import dotenv from 'dotenv';
+import { dirname } from 'path';
+
+dotenv.config();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 // Configure storage based on environment
 const isProduction = process.env.NODE_ENV === 'production';
@@ -31,12 +38,18 @@ const upload = multer({ storage: storage });
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Update CORS configuration to allow requests from port 5173
-app.use(cors({
-  origin: 'http://localhost:5173',
-  methods: ['POST', 'GET', 'OPTIONS'],
-  credentials: true
-}));
+// Basic CORS setup
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', 'http://localhost:5173');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type');
+  
+  // Handle preflight
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+  next();
+});
 
 app.use(express.json());
 
@@ -47,20 +60,23 @@ if (isProduction) {
   app.use('/uploads', express.static('uploads'));
 }
 
-// Get all applications
+// Add logging middleware for all requests
+app.use((req, res, next) => {
+  console.log('Incoming request:', {
+    method: req.method,
+    path: req.path,
+    headers: req.headers
+  });
+  next();
+});
+
+// Add GET endpoint for applications
 app.get('/api/applications', async (req, res) => {
   try {
     const applicationsDir = path.join(__dirname, 'applications');
-    
-    // Create directory if it doesn't exist
     await fs.mkdir(applicationsDir, { recursive: true });
     
-    // Check if directory is empty
     const files = await fs.readdir(applicationsDir);
-    if (files.length === 0) {
-      return res.json([]); // Return empty array if no applications
-    }
-    
     const applications = await Promise.all(
       files
         .filter(file => file.endsWith('.json'))
@@ -69,9 +85,10 @@ app.get('/api/applications', async (req, res) => {
           return JSON.parse(content);
         })
     );
+    
     res.json(applications.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)));
   } catch (error) {
-    console.error('Error reading applications:', error);
+    console.error('Error fetching applications:', error);
     res.status(500).json({ error: 'Failed to fetch applications' });
   }
 });
@@ -154,18 +171,42 @@ app.post('/api/submit-application', async (req, res) => {
         View full details in the admin dashboard.
       `
     };
-
     await transporter.sendMail(mailOptions);
-    console.log('Email sent successfully');
-    
-    res.json({ message: 'Application received and email sent' });
+    res.json({ success: true });
   } catch (error) {
-    console.error('Server error:', error);
-    res.status(500).json({ error: 'Failed to process application' });
+    console.error('Error sending email:', error);
+    res.status(500).json({ error: 'Failed to send email' });
+  }
+});
+
+// Update the delete endpoint to use timestamp
+app.delete('/api/applications/:timestamp', async (req, res) => {
+  try {
+    const { timestamp } = req.params;
+    const applicationsDir = path.join(__dirname, 'applications');
+    const filename = `${timestamp.replace(/[:.]/g, '-')}.json`;
+    const filePath = path.join(applicationsDir, filename);
+    
+    console.log('Attempting to delete:', {
+      originalTimestamp: timestamp,
+      filename: filename,
+      fullPath: filePath
+    });
+
+    // List files in directory to debug
+    const files = await fs.readdir(applicationsDir);
+    console.log('Available files:', files);
+    
+    await fs.unlink(filePath);
+    console.log('Successfully deleted application');
+    res.json({ message: 'Application deleted' });
+  } catch (error) {
+    console.error('Delete error:', error);
+    res.status(500).json({ error: 'Failed to delete application' });
   }
 });
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
   console.log(`CORS enabled for origin: http://localhost:5173`);
-}); 
+});

@@ -26,6 +26,10 @@ const router = createBrowserRouter([
     element: <NonProfits />,
   },
   {
+    path: "/admin",
+    element: <AdminView />,
+  },
+  {
     path: "/admin/applications",
     element: <AdminView />,
   },
