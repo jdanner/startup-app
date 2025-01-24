@@ -2,7 +2,7 @@ import { useForm } from 'react-hook-form';
 import { useEffect } from 'react';
 import emailjs from '@emailjs/browser';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const API_URL = import.meta.env.VITE_API_URL || 'https://startup-apply-api.onrender.com';
 
 const uploadFile = async (file) => {
   if (!file) return null;
@@ -66,7 +66,7 @@ const sendApplicationEmail = async (data) => {
 
 const saveApplication = async (data) => {
   try {
-    const response = await fetch('http://localhost:3000/api/applications', {
+    const response = await fetch(`${API_URL}/api/applications`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -78,7 +78,6 @@ const saveApplication = async (data) => {
       throw new Error('Failed to save application');
     }
 
-    // Remove navigation from here - let the email handler do it
     window.alert('Application submitted successfully!');
   } catch (error) {
     console.error('Storage error:', error);

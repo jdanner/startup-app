@@ -37,18 +37,13 @@ const upload = multer({ storage: storage });
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Basic CORS setup
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', 'http://localhost:5173');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type');
-  
-  // Handle preflight
-  if (req.method === 'OPTIONS') {
-    return res.sendStatus(200);
-  }
-  next();
-});
+// Add CORS configuration to allow requests from danners.org
+app.use(cors({
+  origin: ['http://localhost:5173', 'https://danners.org', 'https://startup-apply.onrender.com'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Content-Length', 'Content-Disposition'],
+  exposedHeaders: ['Content-Disposition']
+}));
 
 app.use(express.json());
 
@@ -125,7 +120,7 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
     
     // Generate URL based on environment
     const baseUrl = isProduction 
-      ? process.env.RENDER_EXTERNAL_URL 
+      ? 'https://startup-apply-api.onrender.com'  // Use actual production URL
       : `http://localhost:${port}`;
     
     const fileUrl = `${baseUrl}/uploads/${req.file.filename}`;
