@@ -4,7 +4,6 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import multer from 'multer';
-import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
 import { dirname } from 'path';
 
@@ -141,42 +140,6 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
 app.get('/api/test', (req, res) => {
   console.log('Test endpoint hit');
   res.json({ message: 'Server is running' });
-});
-
-// Add email configuration
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASSWORD
-  }
-});
-
-// Update the submit-application endpoint
-app.post('/api/submit-application', async (req, res) => {
-  console.log('Received application submission');
-  console.log('Request body:', req.body);
-  
-  try {
-    // Send email
-    const mailOptions = {
-      from: process.env.EMAIL_USER,
-      to: 'your-email@example.com', // Replace with your email
-      subject: 'New Application Submission',
-      text: `
-        New application received:
-        Channel: ${req.body.channel}
-        Experiments per Week: ${req.body.experimentsPerWeek}
-        
-        View full details in the admin dashboard.
-      `
-    };
-    await transporter.sendMail(mailOptions);
-    res.json({ success: true });
-  } catch (error) {
-    console.error('Error sending email:', error);
-    res.status(500).json({ error: 'Failed to send email' });
-  }
 });
 
 // Update the delete endpoint to use timestamp

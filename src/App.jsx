@@ -1,7 +1,6 @@
 import { useForm } from 'react-hook-form';
 import { useEffect } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import AdminView from './AdminView';
+import emailjs from '@emailjs/browser';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
@@ -45,10 +44,23 @@ const uploadFiles = async (data) => {
 
 const sendApplicationEmail = async (data) => {
   try {
-    // This function is no longer used in the new implementation
+    const response = await emailjs.send(
+      'YOUR_SERVICE_ID',
+      'YOUR_TEMPLATE_ID',
+      {
+        companyName: data.companyName,
+        founderName: data.founderName,
+        email: data.email,
+        // other fields...
+      },
+      'YOUR_PUBLIC_KEY'
+    );
+    
+    if (response.status === 200) {
+      console.log('Email sent successfully');
+    }
   } catch (error) {
     console.error('Email error:', error);
-    throw error;
   }
 };
 
@@ -66,8 +78,9 @@ const saveApplication = async (data) => {
       throw new Error('Failed to save application');
     }
 
-    window.alert('Application submitted successfully!');
-    window.location.href = '/';
+    // Remove these lines for now
+    // window.alert('Application submitted successfully!');
+    // window.location.href = '/';
   } catch (error) {
     console.error('Storage error:', error);
     window.alert('Failed to submit application. Please try again.');
@@ -75,197 +88,11 @@ const saveApplication = async (data) => {
 };
 
 function App() {
-  const { register, handleSubmit, formState: { errors, isSubmitting }, reset, watch, setValue } = useForm();
-
-  const sampleData = {
-    companyName: "Cursor AI",
-    websiteUrl: "cursor.ai",
-    founderName: "John Danner",
-    email: "john@danners.org",
-    deckUrl: "https://docs.google.com/presentation/d/1234",
-    videoUrl: "https://loom.com/share/1234",
-    need: 80,
-    valueProposition: 75,
-    magic: 70,
-    activation: 65,
-    intrigued: 60,
-    habit: 55,
-    growthLoops: 0.6,
-    growth: 15,
-    channel: 800,
-    engagement: 5,
-    monetization: 7,
-    experimentsPerWeek: 3
-  };
-
-  useEffect(() => {
-    const handleKeyPress = (e) => {
-      // Check for Ctrl+D (or Cmd+D on Mac)
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'd') {
-        e.preventDefault(); // Prevent browser's default "bookmark" action
-        reset(sampleData);
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyPress);
-    return () => document.removeEventListener('keydown', handleKeyPress);
-  }, [reset]);
-
-  useEffect(() => {
-    // Initialize immediately when component mounts
-    window.emailjs.init("KnFnlHEmTFfBtgae-");
-  }, []);
-
-  const validateUrl = (value) => {
-    if (!value) return true; // Optional URLs pass
-    
-    // Add https:// if missing
-    const url = value.startsWith('http') ? value : `https://${value}`;
-    
-    // Basic domain validation - requires at least one dot and common TLD
-    const commonTLDs = ['com', 'org', 'net', 'edu', 'io', 'app', 'dev', 'ai', 'co'];
-    const domainPattern = new RegExp(
-      `^https?://.+\\.(${commonTLDs.join('|')})(?:/.*)?$`,
-      'i'
-    );
-    
-    return domainPattern.test(url);
-  };
-
-  const onSubmit = async (data) => {
-    try {
-      console.log('Starting submit...');
-      
-      // First upload any files and get back URLs
-      const fileUrls = await uploadFiles(data);
-      
-      const emailData = {
-        from_name: "Application Form",
-        company_name: data.companyName,
-        website: data.websiteUrl,
-        founder: data.founderName,
-        email: data.email,
-        // Use the URLs from file uploads
-        deck_url: fileUrls.deckUrl || 'Not provided',
-        video_url: fileUrls.videoUrl || 'Not provided', 
-        experiments_url: fileUrls.experimentUrl || 'Not provided',
-        metrics: `Need: ${data.need}%
-Value Proposition: ${data.valueProposition}%
-Magic: ${data.magic}%
-Activation: ${data.activation}%
-Intrigued: ${data.intrigued}%
-Habit: ${data.habit}%
-Growth Loops: ${data.growthLoops}
-Growth: ${data.growth}%
-Channel: ${data.channel}
-Engagement: ${data.engagement}
-Monetization: ${data.monetization}%
-
-Experiments per Week: ${data.experimentsPerWeek}`,
-        to_email: "john@danners.org"
-      };
-      
-      console.log('About to send email with uploaded files:', fileUrls);
-      
-      emailjs.send("service_gl3xzva", "template_h62tu28", emailData).then(
-        function(response) {
-          console.log("SUCCESS", response);
-          alert("Email sent successfully!");
-          window.location.href = '/';
-        },
-        function(error) {
-          console.log("FAILED", error);
-          alert("Failed to send email: " + JSON.stringify(error));
-        }
-      );
-    } catch (error) {
-      console.error('Top level error:', error);
-      alert('Error submitting application. Please try again.');
-    }
-  };
-
-  const metrics = [
-    {
-      stage: 'Need',
-      name: 'need',
-      metric: '% of ICPs who visibly get excited (not just polite) when the pain point is described',
-      type: 'percentage'
-    },
-    {
-      stage: 'Value Proposition',
-      name: 'valueProposition',
-      metric: '% of visitors who experience the magic',
-      type: 'percentage'
-    },
-    {
-      stage: 'Magic',
-      name: 'magic',
-      metric: '% of visitors who see your magic who take the next step',
-      type: 'percentage'
-    },
-    {
-      stage: 'Activation',
-      name: 'activation',
-      metric: '% of visitors who saw your magic, who successfully became active users',
-      type: 'percentage'
-    },
-    {
-      stage: 'Intrigued',
-      name: 'intrigued',
-      metric: '% of activated users who retain Day 7',
-      type: 'percentage'
-    },
-    {
-      stage: 'Habit',
-      name: 'habit',
-      metric: '% of Day 7 users who retain Day 30',
-      type: 'percentage'
-    },
-    {
-      stage: 'Growth Loops',
-      name: 'growthLoops',
-      metric: 'How many additional users does each new user create?',
-      type: 'decimal'
-    },
-    {
-      stage: 'Growth',
-      name: 'growth',
-      metric: 'Month over Month organic growth (exclude paid growth)',
-      type: 'percentage'
-    },
-    {
-      stage: 'Channel',
-      name: 'channel',
-      metric: 'Number of daily organic visitors (excluding growth loops)',
-      type: 'number'
-    },
-    {
-      stage: 'Engagement',
-      name: 'engagement',
-      metric: 'How many times do active users visit app per week?',
-      type: 'number'
-    },
-    {
-      stage: 'Monetization',
-      name: 'monetization',
-      metric: '% top of funnel who become paid customers',
-      type: 'percentage'
-    }
-  ];
-
-  console.log('Current pathname:', window.location.pathname);
-
-  return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<ApplicationForm />} />
-        <Route path="/admin" element={<AdminView />} />
-      </Routes>
-    </BrowserRouter>
-  );
+  // App just returns the form
+  return <ApplicationForm />;
 }
 
-// Move the form into its own component
+// ApplicationForm has all the logic
 function ApplicationForm() {
   const { register, handleSubmit, formState: { errors, isSubmitting }, reset, watch, setValue } = useForm();
 
@@ -304,8 +131,12 @@ function ApplicationForm() {
   }, [reset]);
 
   useEffect(() => {
-    // Initialize immediately when component mounts
-    window.emailjs.init("KnFnlHEmTFfBtgae-");
+    // Remove window references
+    console.log('Initializing emailjs...');
+    emailjs.init({
+      publicKey: "KnFnlHEmTFfBtgae-"
+    });
+    console.log('Emailjs initialized');
   }, []);
 
   const validateUrl = (value) => {
@@ -328,16 +159,23 @@ function ApplicationForm() {
     try {
       console.log('Starting submit...');
       
-      // First upload any files and get back URLs
+      // 1. First upload any files and get back URLs
       const fileUrls = await uploadFiles(data);
       
+      // 2. Then save application with URLs
+      await saveApplication({
+        ...data,
+        ...fileUrls
+      });
+      console.log('Application saved successfully');
+
+      // 3. Prepare and send email
       const emailData = {
         from_name: "Application Form",
         company_name: data.companyName,
         website: data.websiteUrl,
         founder: data.founderName,
         email: data.email,
-        // Use the URLs from file uploads
         deck_url: fileUrls.deckUrl || 'Not provided',
         video_url: fileUrls.videoUrl || 'Not provided', 
         experiments_url: fileUrls.experimentUrl || 'Not provided',
@@ -356,22 +194,31 @@ Monetization: ${data.monetization}%
 Experiments per Week: ${data.experimentsPerWeek}`,
         to_email: "john@danners.org"
       };
+
+      console.log('Attempting to send email...', emailData);
       
-      console.log('About to send email with uploaded files:', fileUrls);
-      
-      emailjs.send("service_gl3xzva", "template_h62tu28", emailData).then(
-        function(response) {
-          console.log("SUCCESS", response);
-          alert("Email sent successfully!");
-          window.location.href = '/';
-        },
-        function(error) {
-          console.log("FAILED", error);
-          alert("Failed to send email: " + JSON.stringify(error));
-        }
-      );
+      try {
+        console.log('About to call emailjs.send()');
+        
+        const sendPromise = emailjs.send(
+          "service_gl3xzva", 
+          "template_h62tu28", 
+          emailData
+        );
+        console.log('emailjs.send() returned:', sendPromise);
+        
+        const emailResponse = await sendPromise;
+        console.log("Email sent successfully:", emailResponse);
+        
+        // Comment out redirect for now
+        // window.location.href = '/';
+      } catch (emailError) {
+        console.error("Failed to send email:", emailError);
+        throw new Error('Failed to send email notification');
+      }
+
     } catch (error) {
-      console.error('Top level error:', error);
+      console.error('Error in submission:', error);
       alert('Error submitting application. Please try again.');
     }
   };
