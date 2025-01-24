@@ -78,9 +78,8 @@ const saveApplication = async (data) => {
       throw new Error('Failed to save application');
     }
 
-    // Remove these lines for now
-    // window.alert('Application submitted successfully!');
-    // window.location.href = '/';
+    // Remove navigation from here - let the email handler do it
+    window.alert('Application submitted successfully!');
   } catch (error) {
     console.error('Storage error:', error);
     window.alert('Failed to submit application. Please try again.');
@@ -210,8 +209,7 @@ Experiments per Week: ${data.experimentsPerWeek}`,
         const emailResponse = await sendPromise;
         console.log("Email sent successfully:", emailResponse);
         
-        // Comment out redirect for now
-        // window.location.href = '/';
+        window.location.href = '/';
       } catch (emailError) {
         console.error("Failed to send email:", emailError);
         throw new Error('Failed to send email notification');
