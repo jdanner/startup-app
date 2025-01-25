@@ -1,27 +1,26 @@
 import { useState, useEffect } from 'react';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+import { API_URL } from './config';
 
 export default function AdminView() {
   const [applications, setApplications] = useState([]);
   const [expandedId, setExpandedId] = useState(null);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
+    const fetchApplications = async () => {
+      try {
+        const response = await fetch(`${API_URL}/api/applications`);
+        if (!response.ok) throw new Error('Failed to fetch applications');
+        const data = await response.json();
+        setApplications(data);
+      } catch (error) {
+        console.error('Error fetching applications:', error);
+        setError('Failed to fetch applications');
+      }
+    };
+
     fetchApplications();
   }, []);
-
-  const fetchApplications = async () => {
-    try {
-      console.log('Fetching applications from:', `${API_URL}/api/applications`);
-      const response = await fetch(`${API_URL}/api/applications`);
-      if (!response.ok) throw new Error('Failed to fetch applications');
-      const data = await response.json();
-      console.log('Fetched applications:', data);
-      setApplications(data);
-    } catch (error) {
-      console.error('Error fetching applications:', error);
-    }
-  };
 
   const toggleExpand = (timestamp) => {
     setExpandedId(expandedId === timestamp ? null : timestamp);
