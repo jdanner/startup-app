@@ -14,7 +14,7 @@ const __dirname = dirname(__filename);
 
 // Configure storage based on environment
 const isProduction = process.env.NODE_ENV === 'production';
-const RENDER_STORAGE_PATH = process.env.RENDER_STORAGE_PATH || '/opt/render/project/src/storage';
+const RENDER_STORAGE_PATH = '/data';  // Use Render's mounted disk
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
