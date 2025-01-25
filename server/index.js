@@ -95,7 +95,10 @@ app.post('/api/applications', async (req, res) => {
       timestamp: new Date().toISOString()
     };
 
-    const applicationsDir = path.join(__dirname, 'applications');
+    const applicationsDir = isProduction
+      ? path.join(RENDER_STORAGE_PATH, 'applications')
+      : path.join(__dirname, 'applications');
+
     await fs.mkdir(applicationsDir, { recursive: true });
 
     const filename = `${application.timestamp.replace(/[:.]/g, '-')}.json`;
