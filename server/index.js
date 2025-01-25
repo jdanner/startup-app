@@ -187,5 +187,6 @@ app.delete('/api/applications/:timestamp', async (req, res) => {
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
-  console.log(`CORS enabled for origin: http://localhost:5173`);
+  console.log('Environment:', process.env.NODE_ENV);
+  console.log('Storage path:', isProduction ? RENDER_STORAGE_PATH : __dirname);
 });
