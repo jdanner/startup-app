@@ -12,8 +12,8 @@ dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Configure storage based on environment
-const isProduction = process.env.NODE_ENV === 'production';
+// More reliable way to detect Render environment
+const isProduction = process.env.RENDER === 'true';
 const RENDER_STORAGE_PATH = '/data';  // Use Render's mounted disk
 
 const storage = multer.diskStorage({
@@ -64,12 +64,26 @@ app.use((req, res, next) => {
   next();
 });
 
+// Add logging to debug production environment
+console.log('Environment:', {
+  NODE_ENV: process.env.NODE_ENV,
+  RENDER: process.env.RENDER,
+  DATA_DIR: process.env.DATA_DIR,
+  isProduction
+});
+
 // Add GET endpoint for applications
 app.get('/api/applications', async (req, res) => {
   try {
     const applicationsDir = isProduction
       ? path.join(RENDER_STORAGE_PATH, 'applications')
       : path.join(__dirname, 'applications');
+      
+    console.log('Applications directory:', {
+      isProduction,
+      applicationsDir,
+      exists: await fs.access(applicationsDir).then(() => true).catch(() => false)
+    });
     await fs.mkdir(applicationsDir, { recursive: true });
     
     const files = await fs.readdir(applicationsDir);
