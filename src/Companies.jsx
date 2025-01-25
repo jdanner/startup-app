@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { companies } from './data/companies';
+import { API_URL } from './config';
 
 function Companies() {
   return (

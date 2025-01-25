@@ -1,8 +1,7 @@
 import { useForm } from 'react-hook-form';
 import { useEffect } from 'react';
 import emailjs from '@emailjs/browser';
-
-const API_URL = import.meta.env.VITE_API_URL || 'https://startup-apply-api.onrender.com';
+import { API_URL } from './config';
 
 const uploadFile = async (file) => {
   if (!file) return null;
