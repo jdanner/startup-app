@@ -67,7 +67,9 @@ app.use((req, res, next) => {
 // Add GET endpoint for applications
 app.get('/api/applications', async (req, res) => {
   try {
-    const applicationsDir = path.join(__dirname, 'applications');
+    const applicationsDir = isProduction
+      ? path.join(RENDER_STORAGE_PATH, 'applications')
+      : path.join(__dirname, 'applications');
     await fs.mkdir(applicationsDir, { recursive: true });
     
     const files = await fs.readdir(applicationsDir);
@@ -144,7 +146,9 @@ app.get('/api/test', (req, res) => {
 app.delete('/api/applications/:timestamp', async (req, res) => {
   try {
     const { timestamp } = req.params;
-    const applicationsDir = path.join(__dirname, 'applications');
+    const applicationsDir = isProduction
+      ? path.join(RENDER_STORAGE_PATH, 'applications')
+      : path.join(__dirname, 'applications');
     const filename = `${timestamp.replace(/[:.]/g, '-')}.json`;
     const filePath = path.join(applicationsDir, filename);
     
