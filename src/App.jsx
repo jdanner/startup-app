@@ -85,11 +85,10 @@ const saveApplication = async (data) => {
 };
 
 function App() {
-  // App just returns the form
+  // This component now just returns the form
   return <ApplicationForm />;
 }
 
-// ApplicationForm has all the logic
 function ApplicationForm() {
   const { register, handleSubmit, formState: { errors, isSubmitting }, reset, watch, setValue } = useForm();
 
@@ -162,7 +161,9 @@ function ApplicationForm() {
       // 2. Then save application with URLs
       await saveApplication({
         ...data,
-        ...fileUrls
+        ...fileUrls,
+        type: 'for-profit',
+        timestamp: new Date().toISOString()
       });
       console.log('Application saved successfully');
 
@@ -644,4 +645,5 @@ Experiments per Week: ${data.experimentsPerWeek}`,
   );
 }
 
+export { ApplicationForm };
 export default App; 

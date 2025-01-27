@@ -1,38 +1,29 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
-import App from './App';
-import Home from './Home';
-import AdminView from './AdminView';
-import Companies from './Companies';
-import NonProfits from './NonProfits';
+import { createBrowserRouter, RouterProvider } from 'react-router-dom'
+import Home from './Home.jsx'
+import AdminView from './AdminView.jsx'
+import { ApplicationForm } from './App.jsx'
+import NonProfitForm from './NPApp.jsx'
 import './index.css'
 
 const router = createBrowserRouter([
   {
-    path: "/",
+    path: '/',
     element: <Home />,
   },
   {
-    path: "/apply",
-    element: <App />,
-  },
-  {
-    path: "/companies",
-    element: <Companies />,
-  },
-  {
-    path: "/nonprofit-portfolio",
-    element: <NonProfits />,
-  },
-  {
-    path: "/admin",
+    path: '/admin',
     element: <AdminView />,
   },
   {
-    path: "/admin/applications",
-    element: <AdminView />,
+    path: '/apply/for-profit',
+    element: <ApplicationForm />,
   },
+  {
+    path: '/apply/non-profit',
+    element: <NonProfitForm />,
+  }
 ]);
 
 ReactDOM.createRoot(document.getElementById('root')).render(
